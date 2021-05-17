@@ -1,0 +1,125 @@
+import sys
+import datetime
+import sqlite3
+from sqlite3 import Error
+
+def Buscar():
+    try:#Tratar entonces
+        with sqlite3.connect("cosmeticos.db") as conn:#conectarse a Prueba.db
+            mi_cursor = conn.cursor()#mi_cursor = conn.cursor()
+            Buscar=int(input("Escribe el numero: "))#Leer buscar entero
+            valores = {"Buscar":Buscar}#crear variable criterios tipo diccionario
+            mi_cursor.execute("SELECT clientes.id_cliente,ventas.descripcion,ventas.cantidad,ventas.precio,ventas.total,ventas.fecha FROM clientes join ventas on clientes.id_cliente=ventas.id_ventas and clientes.id_cliente=:Buscar", valores)#Solicitar una consulta trar los datos ientras sea el ID
+            registros = mi_cursor.fetchall()#registros = mi_cursor.fetchall()
+            if registros:
+                for i in registros:#Para folio, descripcion,precio, fecha_registro recorre en registros
+                    print(f"\nNumero: {i[0]}\nDescripcion: {i[1]}--Total {i[4]}--Fecha: {i[5]}\t\n")#Muestra todos los articulos comprados
+            else:
+                print("\n\t\tNo hay informacion disponible con esa clave\n")
+    except sqlite3.Error as e:#Errores de SQL
+        print (e)#Mostrar erroes de SQL
+    except Exception:#Errores del sistema
+        print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")#Mostrar errores del sistema
+    finally:#Finalmente
+        if (conn):#Si hay conexion entonces
+            conn.close()#cerrar conexion
+
+
+def registro():
+    respuesta=1
+    registro=0
+    try:
+        with sqlite3.connect("cosmeticos.db") as conn:
+            print("Conexión establecida")
+            mi_cursor = conn.cursor()
+            mi_cursor2 = conn.cursor()
+            while respuesta==1:
+                switch=False
+                while not switch:
+                    try:
+                        #numero=int(input("Escribe el numero: "))# Escribir "Escribe el numero" Leer numero
+                        Fecha=input("Fecha de hoy (dd/mm/aaaa): ")# Escribir "Fecha de hoy" Leer Fecha
+                        Fecha_datatime = datetime.datetime.strptime(Fecha, "%d/%m/%Y").date()
+                        Fecha_insert = datetime.datetime.combine(Fecha_datatime, datetime.datetime.min.time())
+                        descripcion=input("Escribe la descripcion: ")# Escribir "Escribe la Descripcion" Leer descripcion
+                        cantidad=int(input("Escribe la cantidad: "))#Escribir "Escribe la cantidad" Leer cantidad
+                        precio = float(input("Escribe el precio: "))#Escribir "Escribe el precio" Leer precio
+                        Total=cantidad*precio
+                        bandera=descripcion.isspace()
+                        bandera2=len(descripcion)
+                        if  bandera == False and bandera2>0 and Total>=0:
+                            if registro==0:
+                                valores = {"Descripcion":descripcion}
+                                mi_cursor.execute("INSERT INTO clientes values(null);", valores)
+                                mi_cursor2.execute("SELECT id_cliente FROM clientes", valores)
+                                numero = mi_cursor2.fetchall()[-1][0]
+                                print("Tu numero",numero)
+                                input("escribe: ")
+                                valores = {"Numero": numero,"Descripcion":descripcion,"Cantidad":cantidad,"Precio":precio,"Total":Total ,"Fecha": Fecha_insert}
+                                mi_cursor.execute("INSERT INTO ventas values (:Numero,:Descripcion,:Cantidad,:Precio,:Total,:Fecha);", valores)
+                            else:
+                                valores = {"Numero": numero,"Descripcion":descripcion,"Cantidad":cantidad,"Precio":precio,"Total":Total ,"Fecha": Fecha_insert}
+                                mi_cursor.execute("INSERT INTO ventas values (:Numero,:Descripcion,:Cantidad,:Precio,:Total,:Fecha);", valores)
+                            print(f"Registro\nDescripcon= {descripcion}\n Cantidad: {cantidad}\tPago total: {precio*cantidad}\n")
+                            registro=registro+1
+                            switch=True
+                        else:
+                            print("\tEl monto a guardar no puede ser negativo\n")
+                            
+                    except Error as e:
+                        print ("\n\tError al cargar datos\n",e)
+                    except:
+                        print("Error de captura")
+
+                respuesta=int(input("¿Quieres registrar otro articulo: ? (1-Si/0-No)\n"))
+    except Error as e:
+        print (e)
+    except:
+        print(f"\t\tSe produjo el siguiente error: {sys.exc_info()[0]} de captura de datos")
+    finally:
+        if (conn):
+            conn.close()
+            print("Se ha cerrado la conexión")
+
+
+def Fecha():
+    print("*"*30)
+    try:#Tratar entonces
+        with sqlite3.connect("cosmeticos.db") as conn:#conectarse a Prueba.db
+            mi_cursor = conn.cursor()#mi_cursor = conn.cursor()
+            fecha_consultar = input("Dime fecha una fecha (dd/mm/aaaa): ")#Escribir fecha
+            fecha_consultar = datetime.datetime.strptime(fecha_consultar, "%d/%m/%Y").date()
+            valores = {"Fecha":fecha_consultar}#crear variable criterios tipo diccionario
+            mi_cursor.execute("SELECT clientes.id_cliente,ventas.descripcion,ventas.cantidad,ventas.precio,ventas.total,ventas.fecha FROM clientes join ventas on clientes.id_cliente=ventas.id_ventas and date(ventas.fecha)=:Fecha;", valores)#Solicitar una consulta trar los datos ientras sea el ID
+            registros = mi_cursor.fetchall()#registros = mi_cursor.fetchall()
+            for i in registros:#Para folio, descripcion,precio, fecha_registro recorre en registros
+                    print(f"--Fecha: {i[5]}\nNumero: {i[0]}\nDescripcion: {i[1]}--Total {i[4]}\t\n")#Muestra todos los articulos comprados 
+    except sqlite3.Error as e:#Errores de SQL
+        print (e)#Mostrar erroes de SQL
+    except Exception:#Errores del sistema
+        print(f"Se produjo el siguiente error: {sys.exc_info()[0]}")#Mostrar errores del sistema
+    finally:#Finalmente
+        if (conn):#Si hay conexion entonces
+            conn.close()#cerrar conexion 
+
+
+Ventas=[]#leer ventas = []
+consultas=[]#leer consultas = []
+while (True):#mientras true Entonces
+    print("\nMENÚ PRINCIPAL")#Imprimir
+    print(" ")#[]
+    print("[1] Registrar una venta.")#Imprmir ("[1] Registrar una venta.")
+    print("[2] Reporte de ventas por dia")#imprimir ("[2] Consultar una venta")
+    print("[3] Salir. ")
+    print(" ")
+    opcion = input("¿Qué opción deseas?: ")#Escribir "Que opcion deseas" Leer Opcion
+    respuesta = 1 #Leer opcion = 1
+    if opcion=="1": #Si Opcion = 1 Entonces:
+        registro()
+    elif opcion=="2":# SiNo Opcion = 2
+        Fecha()
+    elif opcion=="3":
+        print("Finalizando Programa....")#Imprimir "Finalizando Programa...."
+        break
+    else:#Sino
+        print ("\nNo has pulsado ninguna opción correcta...\npulsa una tecla para continuar.")# Imprimir "No has pulsado ninguna opcion correcta.... pulsa una tecla para continuar."
